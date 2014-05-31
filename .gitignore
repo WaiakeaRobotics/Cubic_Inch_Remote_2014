@@ -2,6 +2,8 @@
 ## Eclipse
 #################
 
+Release
+
 *.pydevproject
 .project
 .metadata
