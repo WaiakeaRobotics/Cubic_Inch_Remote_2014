@@ -2,7 +2,7 @@
 #include <nRF24L01p.h>
 
 nRF24L01p transmitter(14,8);//CSN,CE
-  //hi
+
 void setup(){
   //delay(150);
   Serial.begin(115200);
