@@ -1,5 +1,6 @@
 #include <SPI.h>
 #include "CL_nRF24L01p.h"
+#include "LOCAL_EEPROMex.h"
 
 nRF24L01p transmitter(14,8);//CSN,CE
 
@@ -23,6 +24,8 @@ int PRXsays;
 //String PRXsays;
 
 void loop(){
+  
+  /*
   if(Serial.available()>0){
     char incomming=Serial.read();
     if(incomming=='\n'){
@@ -34,6 +37,7 @@ void loop(){
       message+=incomming;
     }
   }
+  */
   if(transmitter.available()){
     transmitter.read();
     transmitter.rxPL(PRXsays);
