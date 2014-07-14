@@ -6,7 +6,7 @@
 		#include <WProgram.h>
 	#endif
 	#include <SPI.h>
-	#include "CL_regMapCmds.h"
+	#include "LOCAL_regMapCmds.h"
 
 class nRF24L01p{
 	boolean _prim_rx;

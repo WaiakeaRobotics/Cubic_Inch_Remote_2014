@@ -4,8 +4,8 @@
 	#include <WProgram.h>
 #endif
 #include <SPI.h>
-#include "CL_regMapCmds.h"
-#include "CL_nRF24L01p.h"
+#include "LOCAL_regMapCmds.h"
+#include "LOCAL_nRF24L01p.h"
 
 // library wait time modified so as not to slow down the program if signal is lost
 
