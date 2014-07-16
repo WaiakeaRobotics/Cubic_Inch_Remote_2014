@@ -96,8 +96,9 @@ void setup(){
 // ================================================================
 // ===                  OLED Display Setup                      ===
 // ================================================================ 
-  
-    Serial.begin(115200);
+ 
+    
+    /*
   Wire.begin();	
   Oled.init();  //initialze  OLED display
   DDRB|=0x21;         
@@ -122,7 +123,8 @@ void setup(){
   Oled.setTextXY(2,6);          //Set the cursor to Xth Page, Yth Colum
   Serial.print("Buttons: ");
   
-  /*
+  */
+  
   Wire.begin();	
   Oled.init();  //initialze  OLED display
   DDRB|=0x21;         
@@ -142,7 +144,7 @@ void setup(){
   Oled.putString("Yaw: "); //Print the String 
   Oled.setTextXY(1,5);          //Set the cursor to Xth Page, Yth Column
   Oled.putNumber(yaw); //Print the String
- */
+ 
   
 // ===================++===========================================
 // ===             nrF34L01 Transceiver Setup                   ===
@@ -267,16 +269,16 @@ void loop(){
 // ================================================================
 
   slowTimer++;
-  if (slowTimer > 500){
+  if (slowTimer > 5){
     slowTimer = 0;
     
     //radio.txPL(buttons);
     //radio.send(SLOW);
     
-   // Oled.setTextXY(0,9);          //Set the cursor to Xth Page, Yth Column
-    //Oled.putNumber(buttons); //Print the String
-   // Oled.setTextXY(1,5);          //Set the cursor to Xth Page, Yth Column
-    //Oled.putNumber(yaw); //Print the String
+    Oled.setTextXY(0,9);          //Set the cursor to Xth Page, Yth Column
+    Oled.putChar(buttons); //Print the String
+    Oled.setTextXY(1,5);          //Set the cursor to Xth Page, Yth Column
+    Oled.putNumber(yaw); //Print the String
     
     Serial.print("Buttons: ");
     Serial.println(buttons,BIN);
