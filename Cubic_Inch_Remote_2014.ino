@@ -4,18 +4,16 @@
 // ================================================================
 
 #include <SPI.h>  // Library for SPI communications used by the nRF24L01 radio
-#include <Wire.h> // Library for I2C communications used by OLED
-#include <OLED.h> // Library for the 128x64 pixel OLED display
 #include <RH_NRF24.h>
-RH_NRF24 nrf24(14, 15);
-OLED OLED; // Reference the OLED library to the OLED command name?
+RH_NRF24 nrf24(14, 15); //CSN,CE //Setup radio as radio with CSN on arduino pin 15, CE on 14
 
-//#include "LOCAL_nRF24L01p.h" // nRF24L01 library wait time modified so as not to slow down the program if signal is lost
 #include "LOCAL_EEPROMex.h"  // Library allowing storing of more complicated variables in EEPROM non volatile (Flash) Memory
 
-//nRF24L01p radio(15,14);//CSN,CE //Setup radio as radio with CSN on arduino pin 15, CE on 14
-
-
+#include <Wire.h> // Library for I2C communications used by OLED
+#include <SeeedOLED.h> // OLED Display library
+#include <avr/pgmspace.h>
+#include "bitmap.h"    // Contains the bitmap splash screen image for the remote - a little "bling" you may customize
+SeeedOLED Oled; // Reference the SeeedOLED library to Oled
 
 // ================================================================
 // ===                      Robot Pin Defines                   ===
@@ -99,24 +97,57 @@ void setup(){
 // ===                  OLED Display Setup                      ===
 // ================================================================ 
   
-  OLED.init(0x3D);  //initialze  OLED display
-  OLED.display(); // show splashscreen
-  delay(1000);
+    Serial.begin(115200);
+  Wire.begin();	
+  Oled.init();  //initialze  OLED display
+  DDRB|=0x21;         
+  PORTB |= 0x21;
+
+  Oled.clearDisplay();               // clear the screen and set start position to top left corner
+  Oled.drawBitmap(bitmap,1024);   // 1024 = 128 Pixels * 64 Pixels / 8
+  
+  Oled.clearDisplay();          //clear the screen and set start position to top left corner
+  Oled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
+  Oled.setPageMode();           //Set addressing mode to Page Mode
+  Oled.setTextXY(0,0);          //Set the cursor to Xth Page, Yth Column  
+  Oled.putString("Hello World!"); //Print the String
+  
+  
+  Oled.setTextXY(0,0);          //Set the cursor to Xth Page, Yth Column  
+  Oled.putString("Hello World!"); //Print the String
+  Oled.setTextXY(1,0);          //Set the cursor to Xth Page, Yth Column 
+  Oled.putString("Waiakea Robotics"); //Print the String
+  Oled.setTextXY(2,0);          //Set the cursor to Xth Page, Yth Column
+  Oled.putString("Yaw: "); //Print the String 
+  Oled.setTextXY(2,6);          //Set the cursor to Xth Page, Yth Colum
+  Serial.print("Buttons: ");
+  
+  /*
+  Wire.begin();	
+  Oled.init();  //initialze  OLED display
+  DDRB|=0x21;         
+  PORTB |= 0x21;
+  Oled.clearDisplay();             // clear the screen and set start position to top left corner
+  Oled.drawBitmap(bitmap,1024);   // 1024 = 128 Pixels * 64 Pixels / 8
+  delay(2000); // delay 2 seconds so the splash screen is visible
+  
+  Oled.clearDisplay();          //clear the screen and set start position to top left corner
+  Oled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
+  Oled.setPageMode();           //Set addressing mode to Page Mode
+  Oled.setTextXY(0,0);          //Set the cursor to Xth Page, Yth Column  
+  Oled.putString("Buttons: "); //Print the String 
+  Oled.setTextXY(0,9);          //Set the cursor to Xth Page, Yth Column
+  Oled.putNumber(buttons); //Print the String
+  Oled.setTextXY(1,0);          //Set the cursor to Xth Page, Yth Column  
+  Oled.putString("Yaw: "); //Print the String 
+  Oled.setTextXY(1,5);          //Set the cursor to Xth Page, Yth Column
+  Oled.putNumber(yaw); //Print the String
+ */
   
 // ===================++===========================================
 // ===             nrF34L01 Transceiver Setup                   ===
 // ================================================================
-/*
-  SPI.begin();
-  //SPI.setClockDivider(SPI_CLOCK_DIV2);
-  SPI.setBitOrder(MSBFIRST);
-  radio.channel(0);
-  radio.RXaddress("CIRem");
-  radio.TXaddress("CIBot");
-  radio.init();
-  delay(1000);
-  */
-  
+
   if (!nrf24.init())
     Serial.println("init failed");
   // Defaults after init are 2.402 GHz (channel 2), 2Mbps, 0dBm
@@ -128,14 +159,7 @@ void setup(){
   Serial.println("Hi I'm your Remote");
   
   
-  
-  
-  OLED.clearDisplay();  
-  OLED.setTextSize(1);
-  OLED.setTextColor(WHITE);
-  OLED.setCursor(0,0);
-  OLED.println("Hello, world!");
-  OLED.display();
+
   
 } // End setup function
 
@@ -249,17 +273,10 @@ void loop(){
     //radio.txPL(buttons);
     //radio.send(SLOW);
     
-    OLED.clearDisplay();
-    OLED.setCursor(0,0);
-    OLED.print("ASCII: ");
-    OLED.println(buttons);     // Display button variable in ASCII
-    OLED.print("Decimal: ");
-    OLED.println(buttons,DEC); // Display button variable in Decimal
-    OLED.print("Binary: ");
-    OLED.println(buttons,BIN); // Display button value in Binary
-    OLED.print("Yaw: ");
-    OLED.println(yaw);     // Display the value received from the Robo
-    OLED.display();
+   // Oled.setTextXY(0,9);          //Set the cursor to Xth Page, Yth Column
+    //Oled.putNumber(buttons); //Print the String
+   // Oled.setTextXY(1,5);          //Set the cursor to Xth Page, Yth Column
+    //Oled.putNumber(yaw); //Print the String
     
     Serial.print("Buttons: ");
     Serial.println(buttons,BIN);
