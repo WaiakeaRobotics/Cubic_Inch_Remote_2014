@@ -85,11 +85,21 @@ void setup(){
   digitalWrite(DOWN, HIGH); // Enable pullups on push buttons
   digitalWrite(LEFT, HIGH); // Enable pullups on push buttons
 
-
-// ================================================================
-// ===                    Serial port and TX                    ===
-// ================================================================
   Serial.begin(115200);
+
+  
+// ================================================================
+// ===                  OLED Display Setup                      ===
+// ================================================================ 
+  
+  OLED.init(0x3D);  //initialze  OLED display
+  OLED.display(); // show splashscreen
+  delay(1000);
+  
+// ===================++===========================================
+// ===             nrF34L01 Transceiver Setup                   ===
+// ================================================================
+
   SPI.begin();
   //SPI.setClockDivider(SPI_CLOCK_DIV2);
   SPI.setBitOrder(MSBFIRST);
@@ -100,22 +110,15 @@ void setup(){
   delay(1000);
   Serial.println("Hi I'm your Remote");
   
-// ================================================================
-// ===                  OLED Display Setup                      ===
-// ================================================================ 
   
-  OLED.init(0x3D);  //initialze  OLED display
-  
-  OLED.display(); // show splashscreen
-  delay(2000);
-  OLED.clearDisplay();
-  
+  OLED.clearDisplay();  
   OLED.setTextSize(1);
   OLED.setTextColor(WHITE);
   OLED.setCursor(0,0);
   OLED.println("Hello, world!");
   OLED.display();
-}
+  
+} // End setup function
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
