@@ -6,13 +6,14 @@
 #include <SPI.h>  // Library for SPI communications used by the nRF24L01 radio
 #include <Wire.h> // Library for I2C communications used by OLED
 #include <OLED.h> // Library for the 128x64 pixel OLED display
-
+#include <RH_NRF24.h>
+RH_NRF24 nrf24(14, 15);
 OLED OLED; // Reference the OLED library to the OLED command name?
 
-#include "LOCAL_nRF24L01p.h" // nRF24L01 library wait time modified so as not to slow down the program if signal is lost
+//#include "LOCAL_nRF24L01p.h" // nRF24L01 library wait time modified so as not to slow down the program if signal is lost
 #include "LOCAL_EEPROMex.h"  // Library allowing storing of more complicated variables in EEPROM non volatile (Flash) Memory
 
-nRF24L01p radio(15,14);//CSN,CE //Setup radio as radio with CSN on arduino pin 15, CE on 14
+//nRF24L01p radio(15,14);//CSN,CE //Setup radio as radio with CSN on arduino pin 15, CE on 14
 
 
 
@@ -42,12 +43,15 @@ nRF24L01p radio(15,14);//CSN,CE //Setup radio as radio with CSN on arduino pin 1
 // ===                  Variable Definitions                    ===
 // ================================================================
 
+uint8_t data[1];
+
 unsigned char buttons = 0; // holds current value of all 8 buttons using bit values
 unsigned char buttonsTemp = 0; // holds previous button values to check if something changed
 boolean waiting=false;
 int transmitCounter;
 
 String message;
+int yaw;
  // the receive variable type must be the same as the type being received
 int PRXsays; 
 //String PRXsays;
@@ -59,6 +63,9 @@ int slowTimer; //timer for screen update
 // ================================================================
 
 void setup(){
+  
+  Serial.begin(115200);
+  
 // ================================================================
 // ===                     Robot Pin Setup                      ===
 // ================================================================
@@ -85,7 +92,7 @@ void setup(){
   digitalWrite(DOWN, HIGH); // Enable pullups on push buttons
   digitalWrite(LEFT, HIGH); // Enable pullups on push buttons
 
-  Serial.begin(115200);
+  
 
   
 // ================================================================
@@ -99,7 +106,7 @@ void setup(){
 // ===================++===========================================
 // ===             nrF34L01 Transceiver Setup                   ===
 // ================================================================
-
+/*
   SPI.begin();
   //SPI.setClockDivider(SPI_CLOCK_DIV2);
   SPI.setBitOrder(MSBFIRST);
@@ -108,7 +115,19 @@ void setup(){
   radio.TXaddress("CIBot");
   radio.init();
   delay(1000);
+  */
+  
+  if (!nrf24.init())
+    Serial.println("init failed");
+  // Defaults after init are 2.402 GHz (channel 2), 2Mbps, 0dBm
+  if (!nrf24.setChannel(1))
+    Serial.println("setChannel failed");
+  if (!nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm))
+    Serial.println("setRF failed");    
+  
   Serial.println("Hi I'm your Remote");
+  
+  
   
   
   OLED.clearDisplay();  
@@ -191,16 +210,40 @@ void loop(){
   }
   */
   
-    radio.txPL(buttons);
-    radio.send(FAST);
+    //radio.txPL(buttons);
+    //radio.send(FAST);
     //Serial.println(buttons,BIN);
+    
+    
+  data[0] = buttons;
+  nrf24.send(data, sizeof(data));
+  
+  nrf24.waitPacketSent();
+  // Now wait for a reply
+  uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN];
+  uint8_t len = sizeof(buf);
+
+
+    if (nrf24.recv(buf, &len))
+    {
+      yaw = buf[0];
+      Serial.print("Yaw: ");
+      Serial.println(yaw,DEC);
+    }
+    else
+    {
+      //Serial.println("recv failed");
+    }
+
+  //delay(400);
+  //Serial.println("loop running");
 
 // ================================================================
 // ===                   Write to OLED Display                  ===
 // ================================================================
-/*
+
   slowTimer++;
-  if (slowTimer > 50){
+  if (slowTimer > 500){
     slowTimer = 0;
     
     //radio.txPL(buttons);
@@ -208,14 +251,19 @@ void loop(){
     
     OLED.clearDisplay();
     OLED.setCursor(0,0);
+    OLED.print("ASCII: ");
     OLED.println(buttons);     // Display button variable in ASCII
+    OLED.print("Decimal: ");
     OLED.println(buttons,DEC); // Display button variable in Decimal
+    OLED.print("Binary: ");
     OLED.println(buttons,BIN); // Display button value in Binary
-    OLED.println(PRXsays);     // Display the value received from the Robo
+    OLED.print("Yaw: ");
+    OLED.println(yaw);     // Display the value received from the Robo
     OLED.display();
     
+    Serial.print("Buttons: ");
     Serial.println(buttons,BIN);
   }
-*/
+
 }
 
