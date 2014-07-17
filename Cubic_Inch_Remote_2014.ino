@@ -49,6 +49,7 @@ boolean waiting=false;
 int transmitCounter;
 
 String message;
+unsigned int counter;
 int yaw;
 int robotBattVoltage;
  // the receive variable type must be the same as the type being received
@@ -147,6 +148,8 @@ void setup(){
   //Oled.putNumber(yaw); //Print the String
   Oled.setTextXY(2,0);          //Set the cursor to Xth Page, Yth Column  
   Oled.putString("Robot_V: "); //Print the String 
+  Oled.setTextXY(7,0);          //Set the cursor to Xth Page, Yth Column  
+  Oled.putString("Counter: "); //Print the String 
  
   
 // ===================++===========================================
@@ -271,7 +274,7 @@ void loop(){
 // ================================================================
 // ===                   Write to OLED Display                  ===
 // ================================================================
-
+  counter++;
   slowTimer++;
   if (slowTimer > 5){
     slowTimer = 0;
@@ -279,14 +282,20 @@ void loop(){
     //radio.txPL(buttons);
     //radio.send(SLOW);
     
-    Oled.setTextXY(0,9);          //Set the cursor to Xth Page, Yth Column
+    Oled.setTextXY(0,9);   //Set the cursor to Xth Page, Yth Column
     Oled.putChar(buttons); //Print the String
-    Oled.setTextXY(1,5);          //Set the cursor to Xth Page, Yth Column
-    Oled.putNumber(yaw); //Print the String
-    Oled.putString("  "); //Print the String
-    Oled.setTextXY(2,9);          //Set the cursor to Xth Page, Yth Column
+    Oled.setTextXY(1,5);   //Set the cursor to Xth Page, Yth Column
+    Oled.putNumber(yaw);   //Print the variable
+    Oled.putString("  ");  //Blank space to erase previous characters
+    
+    Oled.setTextXY(2,9);   //Set the cursor to Xth Page, Yth Column
     Oled.putNumber(robotBattVoltage); //Print the String
-    Oled.putString("   "); //Print the String
+    Oled.putString("   "); //Blank space to erase previous characters
+    
+
+    Oled.setTextXY(7,9);          //Set the cursor to Xth Page, Yth Column  
+    Oled.putNumber(counter); //Print the String 
+    //Oled.putString(""); //Blank space to erase previous characters
     
     Serial.print("Buttons: ");
     Serial.println(buttons,BIN);
