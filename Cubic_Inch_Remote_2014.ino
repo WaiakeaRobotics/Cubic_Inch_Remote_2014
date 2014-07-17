@@ -4,7 +4,7 @@
 // ================================================================
 
 #include <SPI.h>  // Library for SPI communications used by the nRF24L01 radio
-#include <RH_NRF24.h>
+#include <RH_NRF24.h> // Max we can send is 28 bytes of data 
 RH_NRF24 nrf24(14, 15); //CSN,CE //Setup radio as radio with CSN on arduino pin 15, CE on 14
 
 #include "LOCAL_EEPROMex.h"  // Library allowing storing of more complicated variables in EEPROM non volatile (Flash) Memory
@@ -50,6 +50,7 @@ int transmitCounter;
 
 String message;
 int yaw;
+int robotBattVoltage;
  // the receive variable type must be the same as the type being received
 int PRXsays; 
 //String PRXsays;
@@ -139,11 +140,13 @@ void setup(){
   Oled.setTextXY(0,0);          //Set the cursor to Xth Page, Yth Column  
   Oled.putString("Buttons: "); //Print the String 
   Oled.setTextXY(0,9);          //Set the cursor to Xth Page, Yth Column
-  Oled.putNumber(buttons); //Print the String
+  //Oled.putNumber(buttons); //Print the String
   Oled.setTextXY(1,0);          //Set the cursor to Xth Page, Yth Column  
   Oled.putString("Yaw: "); //Print the String 
-  Oled.setTextXY(1,5);          //Set the cursor to Xth Page, Yth Column
-  Oled.putNumber(yaw); //Print the String
+  //Oled.setTextXY(1,5);          //Set the cursor to Xth Page, Yth Column
+  //Oled.putNumber(yaw); //Print the String
+  Oled.setTextXY(2,0);          //Set the cursor to Xth Page, Yth Column  
+  Oled.putString("Robot_V: "); //Print the String 
  
   
 // ===================++===========================================
@@ -253,6 +256,7 @@ void loop(){
     if (nrf24.recv(buf, &len))
     {
       yaw = buf[0];
+      robotBattVoltage = buf[1];
       Serial.print("Yaw: ");
       Serial.println(yaw,DEC);
     }
@@ -279,6 +283,10 @@ void loop(){
     Oled.putChar(buttons); //Print the String
     Oled.setTextXY(1,5);          //Set the cursor to Xth Page, Yth Column
     Oled.putNumber(yaw); //Print the String
+    Oled.putString("  "); //Print the String
+    Oled.setTextXY(2,9);          //Set the cursor to Xth Page, Yth Column
+    Oled.putNumber(robotBattVoltage); //Print the String
+    Oled.putString("   "); //Print the String
     
     Serial.print("Buttons: ");
     Serial.println(buttons,BIN);
