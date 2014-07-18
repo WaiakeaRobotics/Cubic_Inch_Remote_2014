@@ -3,17 +3,17 @@
 // ===                      Library Includes                    ===
 // ================================================================
 
-#include <SPI.h>  // Library for SPI communications used by the nRF24L01 radio
-#include <RH_NRF24.h> // Max we can send is 28 bytes of data 
-RH_NRF24 nrf24(14, 15); //CSN,CE //Setup radio as radio with CSN on arduino pin 15, CE on 14
+#include <SPI.h>             // Library for SPI communications used by the nRF24L01 radio
+#include <RH_NRF24.h>        // Max we can send is 28 bytes of data 
+RH_NRF24 nrf24(14, 15);      //CE, CSN
 
-#include "LOCAL_EEPROMex.h"  // Library allowing storing of more complicated variables in EEPROM non volatile (Flash) Memory
+#include "LOCAL_EEPROMex.h"  // Library allowing for storage of more complicated(larger) variables in EEPROM non volatile (Flash) Memory
 
-#include <Wire.h> // Library for I2C communications used by OLED
-#include <SeeedOLED.h> // OLED Display library
+#include <Wire.h>          // Library for I2C communications used by OLED
+#include <SeeedOLED.h>     // OLED Display library - this library was modified from the original to turn on the internal charge pump
 #include <avr/pgmspace.h>
-#include "bitmap.h"    // Contains the bitmap splash screen image for the remote - a little "bling" you may customize
-SeeedOLED Oled; // Reference the SeeedOLED library to Oled
+#include "bitmap.h"        // Contains the bitmap splash screen image for the remote - a little "bling" you may customize
+SeeedOLED Oled;            // Reference the SeeedOLED library to Oled
 
 // ================================================================
 // ===                      Robot Pin Defines                   ===
@@ -33,7 +33,7 @@ SeeedOLED Oled; // Reference the SeeedOLED library to Oled
 
 #define BATT_VOLTAGE 18 // Battery voltage monitor pin - connected to 50% divider to allow the measurment of voltages higher than the vcc of 3.3v
 
-#define IR_38Khz 3    // IR LED 38khz Anode connection
+#define IR_38Khz 3    // IR LED 38khz Anode connection - only used by 1 Cubic Inch robot
 // IR LED cathode connected to arduino TX pin to enable transmitting serial data using IR and normal serial UART
 
 
@@ -41,20 +41,14 @@ SeeedOLED Oled; // Reference the SeeedOLED library to Oled
 // ===                  Variable Definitions                    ===
 // ================================================================
 
-uint8_t data[1];
+uint8_t sendBuffer[RH_NRF24_MAX_MESSAGE_LEN]; // 28 element array of unsigned 8-bit type - 28 is the max message length for the nrf24L01 radio
 
 unsigned char buttons = 0; // holds current value of all 8 buttons using bit values
-unsigned char buttonsTemp = 0; // holds previous button values to check if something changed
-boolean waiting=false;
-int transmitCounter;
 
-String message;
 unsigned int counter;
 int yaw;
 int robotBattVoltage;
  // the receive variable type must be the same as the type being received
-int PRXsays; 
-//String PRXsays;
 
 int slowTimer; //timer for screen update
 
@@ -64,7 +58,7 @@ int slowTimer; //timer for screen update
 
 void setup(){
   
-  Serial.begin(115200);
+  Serial.begin(115200); // start the serial port at 115,200 baud
   
 // ================================================================
 // ===                     Robot Pin Setup                      ===
@@ -93,47 +87,17 @@ void setup(){
   digitalWrite(LEFT, HIGH); // Enable pullups on push buttons
 
   
-
-  
 // ================================================================
 // ===                  OLED Display Setup                      ===
 // ================================================================ 
- 
-    
-    /*
-  Wire.begin();	
-  Oled.init();  //initialze  OLED display
-  DDRB|=0x21;         
-  PORTB |= 0x21;
-
-  Oled.clearDisplay();               // clear the screen and set start position to top left corner
-  Oled.drawBitmap(bitmap,1024);   // 1024 = 128 Pixels * 64 Pixels / 8
   
-  Oled.clearDisplay();          //clear the screen and set start position to top left corner
-  Oled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
-  Oled.setPageMode();           //Set addressing mode to Page Mode
-  Oled.setTextXY(0,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Hello World!"); //Print the String
-  
-  
-  Oled.setTextXY(0,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Hello World!"); //Print the String
-  Oled.setTextXY(1,0);          //Set the cursor to Xth Page, Yth Column 
-  Oled.putString("Waiakea Robotics"); //Print the String
-  Oled.setTextXY(2,0);          //Set the cursor to Xth Page, Yth Column
-  Oled.putString("Yaw: "); //Print the String 
-  Oled.setTextXY(2,6);          //Set the cursor to Xth Page, Yth Colum
-  Serial.print("Buttons: ");
-  
-  */
-  
-  Wire.begin();	
-  Oled.init();  //initialze  OLED display
+  Wire.begin();	//initialize I2C library
+  Oled.init();  //initialize  OLED display
   DDRB|=0x21;         
   PORTB |= 0x21;
   Oled.clearDisplay();             // clear the screen and set start position to top left corner
   Oled.drawBitmap(bitmap,1024);   // 1024 = 128 Pixels * 64 Pixels / 8
-  delay(2000); // delay 2 seconds so the splash screen is visible
+  delay(1000); // delay 2 seconds so the splash screen is visible
   
   Oled.clearDisplay();          //clear the screen and set start position to top left corner
   Oled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
@@ -141,13 +105,19 @@ void setup(){
   Oled.setTextXY(0,0);          //Set the cursor to Xth Page, Yth Column  
   Oled.putString("Buttons: "); //Print the String 
   Oled.setTextXY(0,9);          //Set the cursor to Xth Page, Yth Column
-  //Oled.putNumber(buttons); //Print the String
+
   Oled.setTextXY(1,0);          //Set the cursor to Xth Page, Yth Column  
   Oled.putString("Yaw: "); //Print the String 
-  //Oled.setTextXY(1,5);          //Set the cursor to Xth Page, Yth Column
-  //Oled.putNumber(yaw); //Print the String
+
   Oled.setTextXY(2,0);          //Set the cursor to Xth Page, Yth Column  
   Oled.putString("Robot_V: "); //Print the String 
+  
+  Oled.setTextXY(5,0);          //Set the cursor to Xth Page, Yth Column  
+  Oled.putString("Gyro_T: "); //Print the String 
+  
+  Oled.setTextXY(6,0);          //Set the cursor to Xth Page, Yth Column  
+  Oled.putString("RX_T: "); //Print the String 
+  
   Oled.setTextXY(7,0);          //Set the cursor to Xth Page, Yth Column  
   Oled.putString("Counter: "); //Print the String 
  
@@ -156,18 +126,12 @@ void setup(){
 // ===             nrF34L01 Transceiver Setup                   ===
 // ================================================================
 
-  if (!nrf24.init())
-    Serial.println("init failed");
+  if (!nrf24.init()) Serial.println("init failed");
   // Defaults after init are 2.402 GHz (channel 2), 2Mbps, 0dBm
-  if (!nrf24.setChannel(1))
-    Serial.println("setChannel failed");
-  if (!nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm))
-    Serial.println("setRF failed");    
+  if (!nrf24.setChannel(1)) Serial.println("setChannel failed");
+  if (!nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm)) Serial.println("setRF failed");    
   
   Serial.println("Hi I'm your Remote");
-  
-  
-
   
 } // End setup function
 
@@ -198,90 +162,29 @@ void loop(){
 // ===                    Send Data to Robot                    ===
 // ================================================================
 
+  sendBuffer[0] = buttons; 
+  nrf24.send(sendBuffer, sizeof(sendBuffer));
 
-    //radio.txPL(buttons);
-    //radio.send(FAST);
+  nrf24.waitPacketSent();   // Now wait for a reply
 
-/*
 
-  if (buttons != buttonsTemp){ // Has the buttons variable changed since the last time loop?
-    transmitCounter = 100;
-  }
-  buttonsTemp = buttons;
-  
-  if (transmitCounter >= 100){
-    
-    transmitCounter = 0;
-    radio.txPL(buttons);
-    radio.send(FAST);
-  }
-  transmitCounter ++;
-  */
   
 // ================================================================
 // ===                  Read Data From Robot                    ===
 // ================================================================  
-  /*
-  if (waiting == false){
-    radio.txPL(buttons);
-    radio.send(FAST);
-    radio.init();
-    waiting = true;
-    Serial.println("transmitting");
-  }
-  else{
-    Serial.println("waiting");
-    if(radio.available()){
-      waiting=false;
-      radio.read();
-      radio.rxPL(PRXsays);
-      Serial.println(PRXsays,DEC);
-      Serial.println(buttons,BIN);
-      radio.init();
-    }   
-  }
-  */
+  if (nrf24.waitAvailableTimeout(10))
+  { 
+  uint8_t receiveBuffer[RH_NRF24_MAX_MESSAGE_LEN];
+  uint8_t len = sizeof(receiveBuffer);
   
-    //radio.txPL(buttons);
-    //radio.send(FAST);
-    //Serial.println(buttons,BIN);
-    
-    
-  data[0] = buttons;
-  nrf24.send(data, sizeof(data));
   
-  nrf24.waitPacketSent();
-  // Now wait for a reply
-  uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN];
-  uint8_t len = sizeof(buf);
-
-
-    if (nrf24.recv(buf, &len))
-    {
-      yaw = buf[0];
-      robotBattVoltage = buf[1];
-      Serial.print("Yaw: ");
-      Serial.println(yaw,DEC);
-    }
-    else
-    {
-      //Serial.println("recv failed");
-    }
-
-  //delay(400);
-  //Serial.println("loop running");
-
-// ================================================================
-// ===                   Write to OLED Display                  ===
-// ================================================================
-  counter++;
-  slowTimer++;
-  if (slowTimer > 5){
-    slowTimer = 0;
-    
-    //radio.txPL(buttons);
-    //radio.send(SLOW);
-    
+  if (nrf24.recv(receiveBuffer, &len))
+  {
+    yaw = receiveBuffer[0];
+    robotBattVoltage = receiveBuffer[1];
+    Serial.print("Radio TXTime: ");
+    Serial.println(receiveBuffer[2],DEC);
+    /*
     Oled.setTextXY(0,9);   //Set the cursor to Xth Page, Yth Column
     Oled.putChar(buttons); //Print the String
     Oled.setTextXY(1,5);   //Set the cursor to Xth Page, Yth Column
@@ -292,13 +195,33 @@ void loop(){
     Oled.putNumber(robotBattVoltage); //Print the String
     Oled.putString("   "); //Blank space to erase previous characters
     
+    Oled.setTextXY(5,8);          //Set the cursor to Xth Page, Yth Column  
+    Oled.putNumber(receiveBuffer[3]); //Print the String
+    Oled.putString("   "); //Blank space to erase previous characters 
+    
+    Oled.setTextXY(6,8);          //Set the cursor to Xth Page, Yth Column  
+    Oled.putNumber(receiveBuffer[2]); //Print the String
+    Oled.putString("   "); //Blank space to erase previous characters 
 
     Oled.setTextXY(7,9);          //Set the cursor to Xth Page, Yth Column  
-    Oled.putNumber(counter); //Print the String 
-    //Oled.putString(""); //Blank space to erase previous characters
+    Oled.putNumber(counter); //Print the String
     
-    Serial.print("Buttons: ");
-    Serial.println(buttons,BIN);
+   */
+  } 
+  else{
+    Serial.println("fail");
+  }
+ }
+  //delay(1);
+// ================================================================
+// ===                   Write to OLED Display                  ===
+// ================================================================
+  counter++;
+  slowTimer++;
+  if (slowTimer > 2){
+    slowTimer = 0;
+    //Oled.setTextXY(7,9);          //Set the cursor to Xth Page, Yth Column  
+    //Oled.putNumber(counter); //Print the String
   }
 
 }
