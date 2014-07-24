@@ -43,14 +43,19 @@ SeeedOLED Oled;            // Reference the SeeedOLED library to Oled
 
 uint8_t sendBuffer[RH_NRF24_MAX_MESSAGE_LEN]; // 28 element array of unsigned 8-bit type - 28 is the max message length for the nrf24L01 radio
 
-unsigned char buttons = 0; // holds current value of all 8 buttons using bit values
+uint8_t receiveBuffer[RH_NRF24_MAX_MESSAGE_LEN];
+uint8_t len = sizeof(receiveBuffer);
 
+unsigned char buttons = 0; // holds current value of all 8 buttons using bit values
+char displayCounter = 0;
 unsigned int counter;
 int yaw;
 int robotBattVoltage;
  // the receive variable type must be the same as the type being received
 
 int slowTimer; //timer for screen update
+
+unsigned long lastMillis, loopTime;
 
 // ================================================================
 // ===                      INITIAL SETUP                       ===
@@ -110,15 +115,15 @@ void setup(){
   Oled.putString("Yaw: "); //Print the String 
 
   Oled.setTextXY(2,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Robot_V: "); //Print the String 
+  Oled.putString("Robot V: "); //Print the String 
+  
+  Oled.setTextXY(3,0);          //Set the cursor to Xth Page, Yth Column  
+  Oled.putString("Gyro T: "); //Print the String 
+  
+  Oled.setTextXY(4,0);          //Set the cursor to Xth Page, Yth Column  
+  Oled.putString("RX T: "); //Print the String 
   
   Oled.setTextXY(5,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Gyro_T: "); //Print the String 
-  
-  Oled.setTextXY(6,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("RX_T: "); //Print the String 
-  
-  Oled.setTextXY(7,0);          //Set the cursor to Xth Page, Yth Column  
   Oled.putString("Counter: "); //Print the String 
  
   
@@ -128,8 +133,12 @@ void setup(){
 
   if (!nrf24.init()) Serial.println("init failed");
   // Defaults after init are 2.402 GHz (channel 2), 2Mbps, 0dBm
-  if (!nrf24.setChannel(1)) Serial.println("setChannel failed");
+  if (!nrf24.setChannel(90)) Serial.println("setChannel failed");
   if (!nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm)) Serial.println("setRF failed");    
+  
+  // DataRate250kbps
+  // DataRate1Mbps
+  // DataRate2Mbps
   
   Serial.println("Hi I'm your Remote");
   
@@ -162,6 +171,14 @@ void loop(){
 // ===                    Send Data to Robot                    ===
 // ================================================================
 
+
+  loopTime = millis() - lastMillis;
+  lastMillis = millis();
+  
+  //if (loopTime < 6){
+    //delay(10);
+  //}
+    
   sendBuffer[0] = buttons; 
   nrf24.send(sendBuffer, sizeof(sendBuffer));
 
@@ -174,55 +191,123 @@ void loop(){
 // ================================================================  
   if (nrf24.waitAvailableTimeout(10))
   { 
-  uint8_t receiveBuffer[RH_NRF24_MAX_MESSAGE_LEN];
-  uint8_t len = sizeof(receiveBuffer);
+    if (nrf24.recv(receiveBuffer, &len))
+    {
+      Serial.print("Robot RX Time: ");
+      Serial.println(receiveBuffer[2],DEC);
+      Serial.print("Robot GYRO Time: ");
+      Serial.println(receiveBuffer[3],DEC);
+      Serial.print("Remote Loop Time: ");
+      Serial.println(loopTime,DEC);
+      /*
+      Oled.setTextXY(0,9);   //Set the cursor to Xth Page, Yth Column
+      Oled.putChar(buttons); //Print the String
+      Oled.setTextXY(1,5);   //Set the cursor to Xth Page, Yth Column
+      Oled.putNumber(receiveBuffer[0]);   //Print the Yaw
+      Oled.putString("  ");  //Blank space to erase previous characters
+      
+      Oled.setTextXY(2,9);   //Set the cursor to Xth Page, Yth Column
+      Oled.putNumber(receiveBuffer[1]); //Print the robot batt voltage
+      Oled.putString("   "); //Blank space to erase previous characters
+      
+      Oled.setTextXY(3,8);          //Set the cursor to Xth Page, Yth Column  
+      Oled.putNumber(receiveBuffer[3]); //Print the Gyro Time
+      Oled.putString("   "); //Blank space to erase previous characters 
+      
+      Oled.setTextXY(4,8);          //Set the cursor to Xth Page, Yth Column  
+      Oled.putNumber(receiveBuffer[2]); //Print the RX Time
+      Oled.putString("  "); //Blank space to erase previous characters 
   
-  
-  if (nrf24.recv(receiveBuffer, &len))
-  {
-    yaw = receiveBuffer[0];
-    robotBattVoltage = receiveBuffer[1];
-    Serial.print("Radio TXTime: ");
-    Serial.println(receiveBuffer[2],DEC);
-    /*
-    Oled.setTextXY(0,9);   //Set the cursor to Xth Page, Yth Column
-    Oled.putChar(buttons); //Print the String
-    Oled.setTextXY(1,5);   //Set the cursor to Xth Page, Yth Column
-    Oled.putNumber(yaw);   //Print the variable
-    Oled.putString("  ");  //Blank space to erase previous characters
-    
-    Oled.setTextXY(2,9);   //Set the cursor to Xth Page, Yth Column
-    Oled.putNumber(robotBattVoltage); //Print the String
-    Oled.putString("   "); //Blank space to erase previous characters
-    
-    Oled.setTextXY(5,8);          //Set the cursor to Xth Page, Yth Column  
-    Oled.putNumber(receiveBuffer[3]); //Print the String
-    Oled.putString("   "); //Blank space to erase previous characters 
-    
-    Oled.setTextXY(6,8);          //Set the cursor to Xth Page, Yth Column  
-    Oled.putNumber(receiveBuffer[2]); //Print the String
-    Oled.putString("   "); //Blank space to erase previous characters 
-
-    Oled.setTextXY(7,9);          //Set the cursor to Xth Page, Yth Column  
-    Oled.putNumber(counter); //Print the String
-    
-   */
-  } 
-  else{
-    Serial.println("fail");
+      Oled.setTextXY(5,9);          //Set the cursor to Xth Page, Yth Column  
+      Oled.putNumber(counter); //Print the String
+      */
+    } 
   }
- }
-  //delay(1);
+  else{
+    Serial.println("                         wait timeout");
+  }
+  //delay(15);
 // ================================================================
 // ===                   Write to OLED Display                  ===
 // ================================================================
   counter++;
-  slowTimer++;
-  if (slowTimer > 2){
-    slowTimer = 0;
-    //Oled.setTextXY(7,9);          //Set the cursor to Xth Page, Yth Column  
-    //Oled.putNumber(counter); //Print the String
+  displayCounter++;
+  if (displayCounter > 22){
+    displayCounter = 0;
   }
-
-}
+  /*
+  switch (displayCounter) {
+    case 0:
+      Oled.setTextXY(0,9);   //Set the cursor to Xth Page, Yth Column
+      break;
+    case 1:
+      Oled.putChar(buttons); //Print the String
+      break;
+    case 2:
+      Oled.setTextXY(1,5);   //Set the cursor to Xth Page, Yth Column
+      break;
+    case 3:
+      Oled.putNumber(receiveBuffer[0]);   //Print the Yaw
+      break;
+    case 4:
+      Oled.putString("  ");  //Blank space to erase previous characters
+      break;
+    case 5:
+      Oled.setTextXY(2,9);   //Set the cursor to Xth Page, Yth Column
+      break;
+    case 6:
+      Oled.putNumber(receiveBuffer[1]); //Print the robot batt voltage
+      break;
+    case 7:
+      Oled.putString("   "); //Blank space to erase previous characters
+      break;
+    case 8:
+      Oled.setTextXY(3,8);          //Set the cursor to Xth Page, Yth Column
+      break;
+    case 9:
+      Oled.putNumber(receiveBuffer[3]); //Print the Gyro Time
+      break;
+    case 10:
+      Oled.putString("   "); //Blank space to erase previous characters 
+      break;
+    case 11:
+      Oled.setTextXY(4,8);          //Set the cursor to Xth Page, Yth Column 
+      break;
+    case 12:
+      Oled.putNumber(receiveBuffer[2]); //Print the RX Time
+      break;
+    case 13:
+      Oled.putString("  "); //Blank space to erase previous characters
+      break;
+    case 14:
+      Oled.setTextXY(5,9);          //Set the cursor to Xth Page, Yth Column  
+      break;
+    case 15:
+      //Oled.putNumber(counter); //Print the String
+      break;
+    case 16:
+      Oled.putString("    "); //Blank space to erase previous characters
+      break;
+    case 17:
+      Oled.setTextXY(6,9);          //Set the cursor to Xth Page, Yth Column  
+      break;
+    case 18:
+      
+      break;
+    case 19:
+      Oled.putString("    "); //Blank space to erase previous characters
+      break;
+    case 20:
+      Oled.setTextXY(6,9);          //Set the cursor to Xth Page, Yth Column
+      break;
+    case 21:
+      
+      break;
+    case 22:
+      Oled.putString("    "); //Blank space to erase previous characters
+      break;      
+  }
+  */
+  
+} // End main loop
 
