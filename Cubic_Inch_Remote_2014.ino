@@ -137,10 +137,11 @@ void setup(){
 // ===             nrF34L01 Transceiver Setup                   ===
 // ================================================================
 
-  nrf24.init();
+  if (!nrf24.init())
+    Serial.println("Radio init failed");
   // Defaults after init are 2.402 GHz (channel 2), 2Mbps, 0dBm
   nrf24.setChannel(2);
-  //nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm);    
+  nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm);    
   
   // DataRate250kbps
   // DataRate1Mbps
@@ -241,7 +242,7 @@ void loop(){
         Oled.setTextXY(7,9);          //Set the cursor to Xth Page, Yth Column
         Oled.putNumber(receiveBuffer[6]); //Print the 
         Oled.putString("    "); //Blank space to erase previous characters
-      }
+      } 
 
     } 
   //}
@@ -254,7 +255,7 @@ void loop(){
 // ================================================================
   
   
-  counter++;
+  //counter++;
 
 
   
