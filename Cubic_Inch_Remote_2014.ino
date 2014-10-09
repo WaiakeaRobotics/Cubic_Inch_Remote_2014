@@ -52,12 +52,13 @@ unsigned char buttons = 0; // holds current value of all 8 buttons using bit val
 char displayCounter = 0;
 unsigned int counter;
 int yaw;
-int robotBattVoltage;
  // the receive variable type must be the same as the type being received
 
 int slowTimer; //timer for screen update
 
 unsigned long lastMillis, loopTime;
+
+long RobotBattVoltage; 
 
 bool updateDisplay;
 
@@ -140,12 +141,8 @@ void setup(){
   if (!nrf24.init())
     Serial.println("Radio init failed");
   // Defaults after init are 2.402 GHz (channel 2), 2Mbps, 0dBm
-  nrf24.setChannel(2); // Set the desired Transceiver channel valid values are 0-127, in the US only channels 0-83 are within legal bands
+  nrf24.setChannel(2); // Set the desired Transceiver channel valid values are 0-127, in the US only channels 0-83 are within legal bandslok
   nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm);    
-  
-  // DataRate250kbps
-  // DataRate1Mbps
-  // DataRate2Mbps
   
   Serial.println("Hi I'm your Remote");
   
@@ -162,7 +159,7 @@ void loop(){
 // ===                       Read Buttons                       ===
 // ================================================================
 
-// We use the "bitWrite" function to only change each bit individually in the "buttons" variable depending on the state of each button.  
+// We use the "bitWrite" function to change each bit individually in the "buttons" variable depending on the state of each button.  
 // This allows us to store all 8 button values in one 8 bit variable which can then be easily sent to the robot for decoding. 
   bitWrite(buttons, 0, !(digitalRead(A))); //So here the bit zero bit (right most bit) in "buttons" will be set to the current state of the button named "A"
   bitWrite(buttons, 1, !(digitalRead(B)));
@@ -213,14 +210,15 @@ void loop(){
       
       if (!updateDisplay){
         Oled.setTextXY(0,9);   //Set the cursor to Xth Page, Yth Column
-        Oled.putNumber(buttons); //Print the String
+        Oled.putNumber(receiveBuffer[1]); //Print the String
     
         Oled.setTextXY(1,5);   //Set the cursor to Xth Page, Yth Column
         Oled.putNumber(receiveBuffer[0]);   //Print the Yaw
         Oled.putString("  ");  //Blank space to erase previous characters
     
         Oled.setTextXY(2,9);   //Set the cursor to Xth Page, Yth Column
-        Oled.putNumber(receiveBuffer[1]); //Print the robot batt voltage
+		RobotBattVoltage = receiveBuffer[1] * 0.02578125;
+        Oled.putNumber(RobotBattVoltage); //Print the robot batt voltage
         Oled.putString("   "); //Blank space to erase previous characters
         
         Oled.setTextXY(3,9);          //Set the cursor to Xth Page, Yth Column
