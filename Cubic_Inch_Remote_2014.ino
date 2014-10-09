@@ -33,7 +33,7 @@ SeeedOLED Oled;            // Reference the SeeedOLED library to Oled
 
 //#define LED 13 // Yellow indicator LED - Pin also used by OLED SCK pin so not usable during normal operation
 
-#define BATT_VOLTAGE 18 // Battery voltage monitor pin - connected to 50% divider to allow the measurment of voltages higher than the vcc of 3.3v
+#define BATT_VOLTAGE 17 // Battery voltage monitor pin - connected to 50% divider to allow the measurment of voltages higher than the vcc of 3.3v
 
 #define IR_38Khz 3    // IR LED 38khz Anode connection - only used by 1 Cubic Inch robot
 // IR LED cathode connected to arduino TX pin to enable transmitting serial data using IR and normal serial UART
@@ -58,7 +58,7 @@ int slowTimer; //timer for screen update
 
 unsigned long lastMillis, loopTime;
 
-long RobotBattVoltage; 
+int remoteBattVoltage;
 
 bool updateDisplay;
 
@@ -115,23 +115,28 @@ void setup(){
   Oled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
   Oled.setPageMode();           //Set addressing mode to Page Mode
   Oled.setTextXY(0,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Buttons: "); //Print the String 
-  Oled.setTextXY(0,9);          //Set the cursor to Xth Page, Yth Column
+  Oled.putString("Remote : "); //Print the String 
 
   Oled.setTextXY(1,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Yaw: "); //Print the String 
+  Oled.putString("Robot  : "); //Print the String 
 
   Oled.setTextXY(2,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Robot V: "); //Print the String 
+  Oled.putString("Yaw Deg: "); //Print the String 
   
   Oled.setTextXY(3,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Radio T: "); //Print the String 
+  Oled.putString("RX Time: "); //Print the String 
   
   Oled.setTextXY(4,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Robot T: "); //Print the String 
+  Oled.putString("Loop Time: "); //Print the String 
   
   Oled.setTextXY(5,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Buttons: "); //Print the String 
+  Oled.putString("Value?0: "); //Print the String 
+  
+  Oled.setTextXY(6,0);          //Set the cursor to Xth Page, Yth Column  
+  Oled.putString("Value?1: "); //Print the String 
+  
+  Oled.setTextXY(7,0);          //Set the cursor to Xth Page, Yth Column  
+  Oled.putString("Value?2: "); //Print the String 
  
   
 // ===================++===========================================
@@ -210,35 +215,35 @@ void loop(){
       
       if (!updateDisplay){
         Oled.setTextXY(0,9);   //Set the cursor to Xth Page, Yth Column
-        Oled.putNumber(receiveBuffer[1]); //Print the String
+        Oled.putFloat(analogRead(BATT_VOLTAGE) * 0.0064453); //Print remote battery voltage
+		Oled.putString("V"); //Blank space to erase previous characters
     
-        Oled.setTextXY(1,5);   //Set the cursor to Xth Page, Yth Column
-        Oled.putNumber(receiveBuffer[0]);   //Print the Yaw
-        Oled.putString("  ");  //Blank space to erase previous characters
+        Oled.setTextXY(1,9);   //Set the cursor to Xth Page, Yth Column
+        Oled.putFloat(receiveBuffer[1] * 0.02578125);   //Print the Robot Voltage
+        Oled.putString("V");  //Blank space to erase previous characters
     
         Oled.setTextXY(2,9);   //Set the cursor to Xth Page, Yth Column
-		RobotBattVoltage = receiveBuffer[1] * 0.02578125;
-        Oled.putNumber(RobotBattVoltage); //Print the robot batt voltage
+        Oled.putNumber(receiveBuffer[0] * 1.411); //Print the Yaw - scale 0-360
         Oled.putString("   "); //Blank space to erase previous characters
         
-        Oled.setTextXY(3,9);          //Set the cursor to Xth Page, Yth Column
+        Oled.setTextXY(3,10);          //Set the cursor to Xth Page, Yth Column
         Oled.putNumber(receiveBuffer[2]); //Print the RX Time
         Oled.putString("   "); //Blank space to erase previous characters 
     
-        Oled.setTextXY(4,9);          //Set the cursor to Xth Page, Yth Column 
-        Oled.putNumber(receiveBuffer[3]); //Print the Gyro Time
+        Oled.setTextXY(4,10);          //Set the cursor to Xth Page, Yth Column 
+        Oled.putNumber(receiveBuffer[3]); //Print the loop Time
         Oled.putString("  "); //Blank space to erase previous characters
     
         Oled.setTextXY(5,9);          //Set the cursor to Xth Page, Yth Column  
-        Oled.putNumber(receiveBuffer[4]); //Print the 
+        Oled.putNumber(receiveBuffer[4]); //Print the ?
         Oled.putString("    "); //Blank space to erase previous characters
     
         Oled.setTextXY(6,9);          //Set the cursor to Xth Page, Yth Column  
-        Oled.putNumber(receiveBuffer[5]); //Print the 
+        Oled.putNumber(receiveBuffer[5]); //Print the ?
         Oled.putString("    "); //Blank space to erase previous characters
     
         Oled.setTextXY(7,9);          //Set the cursor to Xth Page, Yth Column
-        Oled.putNumber(receiveBuffer[6]); //Print the 
+        Oled.putNumber(receiveBuffer[6]); //Print the ?
         Oled.putString("    "); //Blank space to erase previous characters
       } 
 
