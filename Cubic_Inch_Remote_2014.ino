@@ -124,19 +124,19 @@ void setup(){
   Oled.putString("Yaw Deg: "); //Print the String 
   
   Oled.setTextXY(3,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("RX Time: "); //Print the String 
+  Oled.putString("TXRX ms: "); //Print the String 
   
   Oled.setTextXY(4,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Loop Time: "); //Print the String 
+  Oled.putString("Gyro ms: "); //Print the String 
   
   Oled.setTextXY(5,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Value?0: "); //Print the String 
+  Oled.putString("Value 4: "); //Print the String 
   
   Oled.setTextXY(6,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Value?1: "); //Print the String 
+  Oled.putString("Value 5: "); //Print the String 
   
   Oled.setTextXY(7,0);          //Set the cursor to Xth Page, Yth Column  
-  Oled.putString("Value?2: "); //Print the String 
+  Oled.putString("Value 6: "); //Print the String 
  
   
 // ===================++===========================================
@@ -226,11 +226,11 @@ void loop(){
         Oled.putNumber(receiveBuffer[0] * 1.411); //Print the Yaw - scale 0-360
         Oled.putString("   "); //Blank space to erase previous characters
         
-        Oled.setTextXY(3,10);          //Set the cursor to Xth Page, Yth Column
+        Oled.setTextXY(3,9);          //Set the cursor to Xth Page, Yth Column
         Oled.putNumber(receiveBuffer[2]); //Print the RX Time
         Oled.putString("   "); //Blank space to erase previous characters 
     
-        Oled.setTextXY(4,10);          //Set the cursor to Xth Page, Yth Column 
+        Oled.setTextXY(4,9);          //Set the cursor to Xth Page, Yth Column 
         Oled.putNumber(receiveBuffer[3]); //Print the loop Time
         Oled.putString("  "); //Blank space to erase previous characters
     
