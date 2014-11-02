@@ -102,7 +102,7 @@ void setup(){
 // ================================================================
 // ===                  OLED Display Setup                      ===
 // ================================================================ 
-  
+
   Wire.begin();	//initialize I2C library
   Oled.init();  //initialize  OLED display
   DDRB|=0x21;         
@@ -137,14 +137,14 @@ void setup(){
   
   Oled.setTextXY(7,0);          //Set the cursor to Xth Page, Yth Column  
   Oled.putString("Value 6: "); //Print the String 
- 
+  
   
 // ===================++===========================================
 // ===             nrF34L01 Transceiver Setup                   ===
 // ================================================================
 
-  if (!nrf24.init())
-    Serial.println("Radio init failed");
+if (!nrf24.init())
+Serial.println("Radio init failed");
   // Defaults after init are 2.402 GHz (channel 2), 2Mbps, 0dBm
   nrf24.setChannel(2); // Set the desired Transceiver channel valid values are 0-127, in the US only channels 0-83 are within legal bandslok
   nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm);    
@@ -182,13 +182,13 @@ void loop(){
 // ================================================================
 
 
-  loopTime = millis() - lastMillis;
-  lastMillis = millis();
-  
+loopTime = millis() - lastMillis;
+lastMillis = millis();
+
   //if (loopTime < 6){
     //delay(10);
   //}
-    
+  
   sendBuffer[0] = buttons; 
   nrf24.send(sendBuffer, sizeof(sendBuffer));
 
@@ -204,10 +204,10 @@ void loop(){
     //delay(5);
     //if (nrf24.available()){
       nrf24.recv(receiveBuffer, &len);
-    
-    //  Serial.print("Robot RX Time: ");
       
-      Serial.println(receiveBuffer[2],DEC);
+    //  Serial.print("Robot RX Time: ");
+    
+    Serial.println(receiveBuffer[2],DEC);
       //Serial.print("                   Robot GYRO Time: ");
       //Serial.println(receiveBuffer[3],DEC);
       //Serial.print("                                         Remote Loop Time: ");
@@ -221,7 +221,7 @@ void loop(){
         Oled.setTextXY(1,9);   //Set the cursor to Xth Page, Yth Column
         Oled.putFloat(receiveBuffer[1] * 0.02578125);   //Print the Robot Voltage
         Oled.putString("V");  //Blank space to erase previous characters
-    
+        
         Oled.setTextXY(2,9);   //Set the cursor to Xth Page, Yth Column
         Oled.putNumber(receiveBuffer[0] * 1.411); //Print the Yaw - scale 0-360
         Oled.putString("   "); //Blank space to erase previous characters
@@ -229,19 +229,19 @@ void loop(){
         Oled.setTextXY(3,9);          //Set the cursor to Xth Page, Yth Column
         Oled.putNumber(receiveBuffer[2]); //Print the RX Time
         Oled.putString("   "); //Blank space to erase previous characters 
-    
+        
         Oled.setTextXY(4,9);          //Set the cursor to Xth Page, Yth Column 
         Oled.putNumber(receiveBuffer[3]); //Print the loop Time
         Oled.putString("  "); //Blank space to erase previous characters
-    
+        
         Oled.setTextXY(5,9);          //Set the cursor to Xth Page, Yth Column  
         Oled.putNumber(receiveBuffer[4]); //Print the ?
         Oled.putString("    "); //Blank space to erase previous characters
-    
+        
         Oled.setTextXY(6,9);          //Set the cursor to Xth Page, Yth Column  
         Oled.putNumber(receiveBuffer[5]); //Print the ?
         Oled.putString("    "); //Blank space to erase previous characters
-    
+        
         Oled.setTextXY(7,9);          //Set the cursor to Xth Page, Yth Column
         Oled.putNumber(receiveBuffer[6]); //Print the ?
         Oled.putString("    "); //Blank space to erase previous characters
@@ -252,12 +252,12 @@ void loop(){
  // else{
  //   Serial.println("                         wait timeout");
  // }
-  
+ 
 // ================================================================
 // ===                   Write to OLED Display                  ===
 // ================================================================
-  
-  
+
+
   //counter++;
 
 
